@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +14,8 @@ import {
   View,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
+
+const FLOWSTATE_BANNER = require('./assets/flowstate-banner.png');
 
 const DEFAULT_URL =
   process.env.EXPO_PUBLIC_FLOWSTATE_URL ||
@@ -61,6 +64,7 @@ export default function App() {
         onHttpError={() => setLoadFailed(true)}
         renderLoading={() => (
           <View style={styles.loading}>
+            <Image source={FLOWSTATE_BANNER} resizeMode="contain" style={styles.banner} />
             <ActivityIndicator color="#10b981" size="large" />
             <Text style={styles.loadingText}>Opening FlowState...</Text>
           </View>
@@ -73,6 +77,7 @@ export default function App() {
           style={styles.overlay}
         >
           <View style={styles.card}>
+            <Image source={FLOWSTATE_BANNER} resizeMode="contain" style={styles.banner} />
             <Text style={styles.title}>Connect to FlowState</Text>
             <Text style={styles.copy}>
               Start the FlowState web server on your computer, then enter the address your phone can reach.
@@ -113,6 +118,7 @@ function WebRedirect({ appUrl }: { appUrl: string }) {
     <SafeAreaView style={styles.webRedirectShell}>
       <StatusBar style="dark" />
       <View style={styles.webRedirectCard}>
+        <Image source={FLOWSTATE_BANNER} resizeMode="contain" style={styles.banner} />
         <ActivityIndicator color="#10b981" size="large" />
         <Text style={styles.title}>Opening FlowState</Text>
         <Text style={styles.copy}>
@@ -147,6 +153,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f8fafc',
     justifyContent: 'center',
+    padding: 24,
+  },
+  banner: {
+    height: 82,
+    marginBottom: 8,
+    maxWidth: 360,
+    width: '100%',
   },
   loadingText: {
     color: '#475569',

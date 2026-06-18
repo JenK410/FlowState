@@ -2702,16 +2702,15 @@ export default function App() {
       <div className="relative z-10 w-full max-w-md bg-white/70 backdrop-blur-3xl border border-white/30 rounded-[2rem] sm:rounded-[3rem] p-4 min-[380px]:p-5 sm:p-8 lg:p-10 shadow-2xl shadow-slate-200/50 flex flex-col items-center text-center animate-in fade-in zoom-in duration-1000">
         
         {/* Subtle Branding */}
-        <div className="mb-5 sm:mb-8 lg:mb-10 text-slate-900">
-          <div className="relative inline-block">
-            <img src="/logo.png" alt="FlowState Logo" className="block mx-auto w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mb-4 sm:mb-6 drop-shadow-xl rounded-[1.5rem] sm:rounded-[2rem] border-2 border-white object-cover object-center" />
-            <motion.div 
-              className="absolute -inset-2 bg-mint/30 blur-xl rounded-full -z-10"
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
+        <div className="mb-5 sm:mb-8 lg:mb-10 text-slate-900 w-full">
+          <div className="relative mx-auto w-full max-w-[340px] sm:max-w-[400px]">
+            <img src="/flowstate-banner.png" alt="FlowState" className="block mx-auto w-full h-auto max-h-28 sm:max-h-32 lg:max-h-36 object-contain drop-shadow-xl" />
+            <motion.div
+              className="absolute inset-x-10 bottom-2 h-10 bg-mint/30 blur-2xl rounded-full -z-10"
+              animate={{ opacity: [0.25, 0.55, 0.25] }}
               transition={{ duration: 4, repeat: Infinity }}
             />
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-sans font-bold tracking-tight mb-2">FlowState</h1>
           <p className="text-emerald-600/80 font-black tracking-wide uppercase text-xs">Precision Day Planning</p>
         </div>
 
@@ -3311,8 +3310,12 @@ export default function App() {
                 <Menu size={20} />
               </button>
               
-              <div className="logo-outline flex flex-col items-center">
-                <h1 className="bubble-text text-3xl min-[380px]:text-4xl lg:text-5xl px-10 lg:px-6 pt-3 pb-1 leading-none">FlowState</h1>
+              <div className="flex flex-col items-center w-full min-w-0">
+                <img
+                  src="/flowstate-banner.png"
+                  alt="FlowState"
+                  className="w-[min(72vw,360px)] lg:w-[min(34vw,470px)] h-auto max-h-16 lg:max-h-20 object-contain drop-shadow-sm"
+                />
                 {showWorkspaceContext && organizations.some(o => o.id === activeOrgId) && (
                   <div className="flex items-center gap-1.5 px-3 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 mb-2 animate-in fade-in zoom-in duration-500">
                     <Building2 size={10} className="text-emerald-500" />
