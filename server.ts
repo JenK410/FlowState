@@ -42,7 +42,7 @@ const ANALYTICS_PRODUCT_CONFIG: Record<AnalyticsScope, {
     unitAmount: 299,
   },
   workspace: {
-    name: "FlowState Workspace Analytics",
+    name: "FlowState Workspace Suite",
     unitAmount: 499,
   },
 };

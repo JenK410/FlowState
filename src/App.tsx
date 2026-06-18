@@ -159,9 +159,9 @@ const ANALYTICS_PLANS = {
     description: 'Personal performance analytics, focus velocity, balance reports, and hidden optimization signals.'
   },
   workspace: {
-    title: 'Workspace Analytics',
+    title: 'Workspace Suite',
     price: 'From $4.99/month',
-    description: 'Workspace reports, team signals, customer flow insights, and shared performance analytics. Pricing increases $1/month for every additional 15 employees.'
+    description: 'Full workspace access, team tools, customer flow, tasks, reports, proposals, invoices, and shared performance analytics. Pricing increases $1/month for every additional 15 employees.'
   }
 } as const;
 
@@ -2582,11 +2582,11 @@ export default function App() {
 
     if (scope === 'workspace') {
       if (!activeOrgId) {
-        window.alert('Open a workspace before starting workspace analytics.');
+        window.alert('Open a workspace before starting workspace billing.');
         return;
       }
       if (currentMembership?.role !== 'admin') {
-        window.alert('Only workspace admins can start workspace analytics billing.');
+        window.alert('Only workspace admins can start workspace billing.');
         return;
       }
     }
@@ -2647,7 +2647,7 @@ export default function App() {
       <p className="text-xs text-dove font-bold uppercase tracking-widest leading-relaxed max-w-xl mx-auto mb-6">
         {scope === 'mainframe'
           ? 'Unlock personal trend charts, focus velocity, life balance, and biological velocity.'
-          : 'Unlock reports and analytics for this workspace only. The rest of the workspace stays open.'}
+          : 'Unlock the full workspace suite for this workspace, including teams, tasks, reports, CRM, proposals, invoices, and admin tools.'}
       </p>
       <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-5 py-4">
         <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-1">Subscription Payment</p>
@@ -2663,7 +2663,7 @@ export default function App() {
         {[
           ['Focus Trends', 'See momentum across days'],
           ['Balance Reports', 'Compare time by domain'],
-          ['Team Signals', scope === 'workspace' ? 'Workspace-level reporting' : 'Personal performance view']
+          ['Team Signals', scope === 'workspace' ? 'Full workspace access' : 'Personal performance view']
         ].map(([title, body]) => (
           <div key={title} className="rounded-2xl bg-slate-50 border border-slate-100 p-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-700 mb-1">{title}</p>
@@ -2703,8 +2703,8 @@ export default function App() {
         
         {/* Subtle Branding */}
         <div className="mb-5 sm:mb-8 lg:mb-10 text-slate-900 w-full">
-          <div className="relative mx-auto w-full max-w-[340px] sm:max-w-[400px]">
-            <img src="/flowstate-banner.png" alt="FlowState" className="block mx-auto w-full h-auto max-h-28 sm:max-h-32 lg:max-h-36 object-contain drop-shadow-xl" />
+          <div className="relative mx-auto w-full max-w-[390px] sm:max-w-[430px]">
+            <img src="/flowstate-banner.png" alt="FlowState" className="block mx-auto w-full h-auto max-h-36 sm:max-h-40 lg:max-h-44 object-contain drop-shadow-xl" />
             <motion.div
               className="absolute inset-x-10 bottom-2 h-10 bg-mint/30 blur-2xl rounded-full -z-10"
               animate={{ opacity: [0.25, 0.55, 0.25] }}
@@ -3314,7 +3314,7 @@ export default function App() {
                 <img
                   src="/flowstate-banner.png"
                   alt="FlowState"
-                  className="w-[min(72vw,360px)] lg:w-[min(34vw,470px)] h-auto max-h-16 lg:max-h-20 object-contain drop-shadow-sm"
+                  className="w-[min(86vw,430px)] lg:w-[min(44vw,620px)] h-auto max-h-20 lg:max-h-24 object-contain drop-shadow-sm"
                 />
                 {showWorkspaceContext && organizations.some(o => o.id === activeOrgId) && (
                   <div className="flex items-center gap-1.5 px-3 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 mb-2 animate-in fade-in zoom-in duration-500">
@@ -3751,6 +3751,12 @@ export default function App() {
           )}
 
           {activeTab === 'workspaces' && activeOrgId && (
+            !hasWorkspaceAnalyticsSubscription ? (
+              <AnalyticsSubscriptionGate
+                scope="workspace"
+                canActivate={currentMembership?.role === 'admin'}
+              />
+            ) : (
               // Our Active Workspace Suite Container
               <div className="max-w-7xl mx-auto w-full min-w-0 space-y-6 animate-in fade-in duration-300 text-left pb-20 font-sans">
                 {/* 1. Header Control Panel */}
@@ -3823,22 +3829,15 @@ export default function App() {
                   {/* Right hand details screen container */}
                   <div className="lg:col-span-3">
                     {workspaceModule !== 'settings' ? (
-                      workspaceModule === 'reports' && !hasWorkspaceAnalyticsSubscription ? (
-                        <AnalyticsSubscriptionGate
-                          scope="workspace"
-                          canActivate={currentMembership?.role === 'admin'}
-                        />
-                      ) : (
-                        <CRMModule
-                          orgId={activeOrgId}
-                          workspaceTab={workspaceModule as any}
-                          userId={user?.uid || ''}
-                          userEmail={user?.email || ''}
-                          userName={user?.displayName || user?.email || 'User'}
-                          members={activeOrgMembers}
-                          role={activeOrgMembers.find(m => m.userId === user?.uid)?.role || 'worker'}
-                        />
-                      )
+                      <CRMModule
+                        orgId={activeOrgId}
+                        workspaceTab={workspaceModule as any}
+                        userId={user?.uid || ''}
+                        userEmail={user?.email || ''}
+                        userName={user?.displayName || user?.email || 'User'}
+                        members={activeOrgMembers}
+                        role={activeOrgMembers.find(m => m.userId === user?.uid)?.role || 'worker'}
+                      />
                     ) : (
                       <div className="space-y-6">
                         {/* Workspace Admin Settings Block */}
@@ -4199,7 +4198,8 @@ export default function App() {
           </div>
         </div>
       </div>
-    )}
+    )
+          )}
 
     {activeTab === 'analytics' && (
       hasMainframeAnalyticsSubscription ? (

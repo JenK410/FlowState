@@ -156,9 +156,9 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   banner: {
-    height: 82,
-    marginBottom: 8,
-    maxWidth: 360,
+    height: 104,
+    marginBottom: 10,
+    maxWidth: 420,
     width: '100%',
   },
   loadingText: {
