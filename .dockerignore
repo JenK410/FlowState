@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-server
+mobile/node_modules
+logs
+.expo
+.git
+.env
+.env.*
+*.log
+firebase-admin-service-account*.json
+firebase-service-account*.json
+serviceAccountKey*.json
+*-firebase-adminsdk-*.json

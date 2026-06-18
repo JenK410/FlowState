@@ -1,0 +1,281 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A scheduled or unscheduled task.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "orgId": { "type": "string", "description": "Optional organization ID" },
+        "workerId": { "type": "string", "description": "Specific worker assigned if applicable" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "duration": { "type": "integer", "description": "Duration in minutes" },
+        "domain": { "type": "string", "enum": ["Development", "Admin", "Leisure", "Personal", "Wealth", "Health"] },
+        "priority": { "type": "integer", "enum": [1, 2, 3] },
+        "status": { "type": "string", "enum": ["pending", "complete", "overflow"] },
+        "date": { "type": "string", "format": "date" },
+        "fixedTime": { "type": "string", "description": "HH:mm format if fixed" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "duration", "domain", "status", "date"]
+    },
+    "Organization": {
+      "title": "Organization",
+      "description": "An organization that can manage multiple workers.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "adminId": { "type": "string" },
+        "joinCode": { "type": "string", "description": "Unique code for workers to join" },
+        "joinCodeEnabled": { "type": "boolean", "description": "Toggles code joining on/off" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "adminId", "joinCode", "createdAt"]
+    },
+    "Membership": {
+      "title": "Membership",
+      "description": "Links a user to an organization.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "orgId": { "type": "string" },
+        "name": { "type": "string", "description": "Preferred display name in this org" },
+        "jobTitle": { "type": "string", "description": "Job title or role description" },
+        "role": { "type": "string", "enum": ["admin", "worker"] },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "orgId", "role", "joinedAt"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User's personal schedule preferences.",
+      "type": "object",
+      "properties": {
+        "sleepStart": { "type": "string", "description": "HH:mm" },
+        "sleepEnd": { "type": "string", "description": "HH:mm" },
+        "morningRoutine": { "type": "integer", "description": "Duration in minutes" },
+        "eveningRoutine": { "type": "integer", "description": "Duration in minutes" },
+        "individualMode": { "type": "boolean", "description": "Whether user continues as an individual solo user" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sleepStart", "sleepEnd"]
+    },
+    "CheckIn": {
+      "title": "CheckIn",
+      "description": "User mood and energy check-in.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "mood": { "type": "integer", "description": "1 to 5" },
+        "energy": { "type": "integer", "description": "1 to 5" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "mood", "energy", "createdAt"]
+    },
+    "CRMContact": {
+      "title": "CRMContact",
+      "description": "CRM Contact record.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "accountId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "firstName", "lastName", "status"]
+    },
+    "CRMAccount": {
+      "title": "CRMAccount",
+      "description": "CRM Account / Company record.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "name": { "type": "string" },
+        "industry": { "type": "string" },
+        "website": { "type": "string" },
+        "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "name", "status"]
+    },
+    "CRMLead": {
+      "title": "CRMLead",
+      "description": "CRM Prospect or Lead tracking.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "title": { "type": "string" },
+        "estimateValue": { "type": "number" },
+        "contactId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "stage": { "type": "string", "enum": ["new", "contacted", "qualified", "lost"] },
+        "confidence": { "type": "integer" },
+        "source": { "type": "string" },
+        "assignedWorkerId": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "title", "stage", "estimateValue"]
+    },
+    "CRMOpportunity": {
+      "title": "CRMOpportunity",
+      "description": "CRM Opportunity and Sales Deal.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "title": { "type": "string" },
+        "value": { "type": "number" },
+        "leadId": { "type": "string" },
+        "stage": { "type": "string", "enum": ["qualification", "proposal", "negotiation", "won", "lost"] },
+        "probability": { "type": "integer" },
+        "closeDate": { "type": "string" },
+        "assignedWorkerId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["orgId", "title", "stage", "value"]
+    },
+    "CRMActivity": {
+      "title": "CRMActivity",
+      "description": "Activities like calls, emails, notes, tasks on targets.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "type": { "type": "string", "enum": ["call", "email", "meeting", "task"] },
+        "subject": { "type": "string" },
+        "description": { "type": "string" },
+        "entityType": { "type": "string", "enum": ["contact", "lead", "opportunity", "account"] },
+        "entityId": { "type": "string" },
+        "workerId": { "type": "string" },
+        "workerName": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["completed", "scheduled"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["orgId", "type", "subject", "entityType", "entityId", "workerId", "status"]
+    },
+    "CRMAppointment": {
+      "title": "CRMAppointment",
+      "description": "CRM meeting and appointment schedules.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "start": { "type": "string" },
+        "end": { "type": "string" },
+        "contactId": { "type": "string" },
+        "attendeeEmails": { "type": "array" },
+        "workerId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["orgId", "title", "start", "end", "workerId"]
+    },
+    "CRMQuoteInvoice": {
+      "title": "CRMQuoteInvoice",
+      "description": "CRM Quote/Invoice generation document.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "type": { "type": "string", "enum": ["quote", "invoice"] },
+        "number": { "type": "string" },
+        "title": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerType": { "type": "string", "enum": ["contact", "account"] },
+        "amount": { "type": "number" },
+        "tax": { "type": "number" },
+        "discount": { "type": "number" },
+        "items": { "type": "array" },
+        "status": { "type": "string", "enum": ["draft", "sent", "paid", "expired"] },
+        "date": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["orgId", "type", "number", "title", "customerId", "amount", "status"]
+    },
+    "CRMAuditLog": {
+      "title": "CRMAuditLog",
+      "description": "Audit history trail of all workspace changes.",
+      "type": "object",
+      "properties": {
+        "orgId": { "type": "string" },
+        "action": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "previousState": { "type": "string" },
+        "newState": { "type": "string" }
+      },
+      "required": ["orgId", "action", "userId", "userEmail", "entityType", "entityId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "tasks": {
+      "schema": "Task",
+      "description": "User tasks and commitments."
+    },
+    "userSettings": {
+      "schema": "UserSettings",
+      "description": "User preferences for sleep and routines."
+    },
+    "checkIns": {
+      "schema": "CheckIn",
+      "description": "Daily mood and energy check-ins."
+    },
+    "organizations": {
+      "schema": "Organization",
+      "description": "Organizations managed by admins."
+    },
+    "memberships": {
+      "schema": "Membership",
+      "description": "Links between users and organizations."
+    },
+    "crm_contacts": {
+      "schema": "CRMContact",
+      "description": "Contact records under workspace."
+    },
+    "crm_accounts": {
+      "schema": "CRMAccount",
+      "description": "Company accounts under workspace."
+    },
+    "crm_leads": {
+      "schema": "CRMLead",
+      "description": "Business sales prospects and leads."
+    },
+    "crm_opportunities": {
+      "schema": "CRMOpportunity",
+      "description": "Pipeline deals and opportunities."
+    },
+    "crm_activities": {
+      "schema": "CRMActivity",
+      "description": "Log of emails, calls, notes, and tasks related to items."
+    },
+    "crm_appointments": {
+      "schema": "CRMAppointment",
+      "description": "CRM shared appointments."
+    },
+    "crm_quotes_invoices": {
+      "schema": "CRMQuoteInvoice",
+      "description": "Business quotes and invoices."
+    },
+    "crm_audit_logs": {
+      "schema": "CRMAuditLog",
+      "description": "System and user action history logs."
+    }
+  }
+}

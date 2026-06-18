@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "FlowState",
+    "slug": "flowstate",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "flowstate",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ecfffb"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flowstate.mobile"
+    },
+    "android": {
+      "package": "com.flowstate.mobile",
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ecfffb"
+      }
+    },
+    "extra": {
+      "flowstateUrl": "http://192.168.12.145:3001"
+    }
+  }
+}

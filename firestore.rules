@@ -1,0 +1,304 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function membershipDocId(orgId) {
+      return request.auth.uid + '_' + orgId;
+    }
+
+    function isOrgAdmin(orgId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/memberships/$(membershipDocId(orgId)))
+        && get(/databases/$(database)/documents/memberships/$(membershipDocId(orgId))).data.role == 'admin';
+    }
+
+    function isOrgMember(orgId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/memberships/$(membershipDocId(orgId)));
+    }
+
+    // --- Validation Blueprints ---
+
+    function isValidTask(data) {
+      return (data.userId == request.auth.uid || (data.get('orgId', null) != null && isOrgAdmin(data.orgId)))
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 300
+        && (!('description' in data) || data.description == null || data.description is string)
+        && data.duration is int && data.duration >= 0
+        && data.domain in ['Work', 'Development', 'Admin', 'Health', 'Wellness', 'Meals', 'Leisure', 'Personal', 'Wealth', 'Sleep']
+        && data.priority in [1, 2, 3]
+        && data.status in ['pending', 'complete', 'overflow']
+        && data.date is string && data.date.size() >= 8 && data.date.size() <= 10
+        && (!('fixedTime' in data) || data.fixedTime == null || (data.fixedTime is string && data.fixedTime.size() >= 4 && data.fixedTime.size() <= 5))
+        && (data.createdAt is int || data.createdAt is timestamp || data.createdAt == request.time)
+        && (data.updatedAt is int || data.updatedAt is timestamp || data.updatedAt == request.time)
+        && (!('workerId' in data) || data.workerId == null || data.workerId is string);
+    }
+
+    function isValidOrganization(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.adminId == request.auth.uid
+        && data.joinCode is string && data.joinCode.size() > 0
+        && (!('joinCodeEnabled' in data) || data.joinCodeEnabled is bool)
+        && (data.createdAt is int || data.createdAt is timestamp || data.createdAt == request.time);
+    }
+
+    function isValidWorkspaceCode(data) {
+      return data.orgId is string
+        && data.orgName is string && data.orgName.size() > 0 && data.orgName.size() <= 100
+        && data.enabled is bool
+        && data.adminId is string
+        && (data.createdAt is int || data.createdAt is timestamp || data.createdAt == request.time);
+    }
+
+    function isValidMembership(data) {
+       return data.userId is string && data.orgId is string
+         && data.role in ['admin', 'worker']
+         && (!('name' in data) || data.name == null || (data.name is string && data.name.size() <= 100))
+         && (!('jobTitle' in data) || data.jobTitle == null || (data.jobTitle is string && data.jobTitle.size() <= 100))
+         && (data.joinedAt is int || data.joinedAt is timestamp || data.joinedAt == request.time);
+    }
+
+    function isValidInvite(data) {
+      return data.orgId is string
+        && data.orgName is string && data.orgName.size() > 0 && data.orgName.size() <= 100
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && (!('email' in data) || data.email == null || (data.email is string && data.email.size() > 3 && data.email.size() <= 320))
+        && data.token is string && data.token.size() > 0 && data.token.size() <= 128
+        && data.status in ['pending', 'accepted', 'declined']
+        && data.invitedBy is string
+        && data.role in ['admin', 'worker']
+        && (!('jobTitle' in data) || data.jobTitle == null || (data.jobTitle is string && data.jobTitle.size() <= 100))
+        && (data.expiresAt is timestamp || data.expiresAt is int)
+        && (data.createdAt is int || data.createdAt is timestamp || data.createdAt == request.time);
+    }
+
+    function isValidUserSettings(data) {
+      return data.sleepStart is string && data.sleepStart.size() >= 4 && data.sleepStart.size() <= 6
+        && data.sleepEnd is string && data.sleepEnd.size() >= 4 && data.sleepEnd.size() <= 6
+        && data.morningRoutine is int && data.morningRoutine >= 0
+        && data.eveningRoutine is int && data.eveningRoutine >= 0
+        && (!('individualMode' in data) || data.individualMode == null || data.individualMode is bool)
+        && (data.updatedAt is int || data.updatedAt is timestamp || data.updatedAt == request.time);
+    }
+
+    function isValidCheckIn(data) {
+      return data.userId == request.auth.uid
+        && data.date is string && data.date.size() >= 8 && data.date.size() <= 10
+        && data.mood is int && data.mood >= 1 && data.mood <= 5
+        && data.energy is int && data.energy >= 1 && data.energy <= 5
+        && (data.createdAt is int || data.createdAt is timestamp || data.createdAt == request.time);
+    }
+
+    // --- CRM Validation Blueprints ---
+
+    function isValidCRMContact(data) {
+      return data.orgId is string && data.firstName is string && data.firstName.size() > 0 
+        && data.lastName is string && data.status in ['active', 'inactive'];
+    }
+
+    function isValidCRMAccount(data) {
+      return data.orgId is string && data.name is string && data.name.size() > 0 
+        && data.status in ['active', 'inactive'];
+    }
+
+    function isValidCRMLead(data) {
+      return data.orgId is string && data.title is string && data.title.size() > 0 
+        && data.stage in ['new', 'contacted', 'qualified', 'lost'] && (data.estimateValue is int || data.estimateValue is float);
+    }
+
+    function isValidCRMOpportunity(data) {
+      return data.orgId is string && data.title is string && data.title.size() > 0 
+        && data.stage in ['qualification', 'proposal', 'negotiation', 'won', 'lost'] && (data.value is int || data.value is float);
+    }
+
+    function isValidCRMActivity(data) {
+      return data.orgId is string && data.type in ['call', 'email', 'meeting', 'task'] 
+        && data.subject is string && data.subject.size() > 0 && data.entityType in ['contact', 'lead', 'opportunity', 'account'] 
+        && data.entityId is string && data.workerId is string && data.status in ['completed', 'scheduled'];
+    }
+
+    function isValidCRMAppointment(data) {
+      return data.orgId is string && data.title is string && data.title.size() > 0 
+        && data.start is string && data.end is string && data.workerId is string;
+    }
+
+    function isValidCRMQuoteInvoice(data) {
+      return data.orgId is string && data.type in ['quote', 'invoice'] 
+        && data.number is string && data.title is string && data.title.size() > 0 
+        && data.customerId is string && (data.amount is int || data.amount is float) && data.status in ['draft', 'sent', 'paid', 'expired'];
+    }
+
+    function isValidCRMAuditLog(data) {
+      return data.orgId is string && data.action is string && data.action.size() > 0 
+        && data.userId is string && data.userEmail is string && data.entityType is string 
+        && data.entityId is string && data.timestamp is string;
+    }
+
+    // --- Collections ---
+    match /_healthcheck/{document} {
+      allow read: if true;
+    }
+
+    match /tasks/{taskId} {
+      allow create: if isSignedIn() && isValidTask(incoming());
+      allow update: if isSignedIn() && (
+        // Admin or Owner can update everything
+        (isOwner(existing().userId) || (('orgId' in existing()) && isOrgAdmin(existing().orgId))) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isValidTask(incoming())
+      ) || (
+        // Worker assigned to task can update status ONLY
+        ('orgId' in existing()) && isOrgMember(existing().orgId) &&
+        (existing().get('workerId', null) == request.auth.uid || existing().get('workerId', null) == null) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        incoming().status in ['pending', 'complete', 'overflow'] &&
+        incoming().updatedAt == request.time
+      );
+      allow delete: if isSignedIn() && (isOwner(existing().userId) || (('orgId' in existing()) && isOrgAdmin(existing().orgId)));
+      allow get: if isSignedIn() && (isOwner(existing().userId) || (('orgId' in existing()) && isOrgMember(existing().orgId)));
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || (('orgId' in resource.data) && isOrgMember(resource.data.orgId)));
+    }
+
+    match /organizations/{orgId} {
+      allow create: if isSignedIn() && isValidOrganization(incoming());
+      // Relaxed get/list rules so users can find and see the org they are about to join
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow update: if isSignedIn() && isOrgAdmin(orgId) && isValidOrganization(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(orgId);
+    }
+
+    match /workspaceCodes/{code} {
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow create: if isSignedIn()
+        && incoming().adminId == request.auth.uid
+        && isValidWorkspaceCode(incoming());
+      allow update: if isSignedIn()
+        && existing().adminId == request.auth.uid
+        && incoming().adminId == existing().adminId
+        && incoming().orgId == existing().orgId
+        && isValidWorkspaceCode(incoming());
+      allow delete: if isSignedIn()
+        && existing().adminId == request.auth.uid;
+    }
+
+    match /memberships/{membershipId} {
+      // Membership ID is userId_orgId
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || isOrgAdmin(incoming().orgId)) && isValidMembership(incoming());
+      allow get: if isSignedIn() && (resource == null || existing().userId == request.auth.uid || isOrgMember(existing().orgId));
+      allow list: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || isOrgMember(resource.data.orgId));
+      allow update: if isSignedIn() && (existing().userId == request.auth.uid || isOrgAdmin(existing().orgId)) && isValidMembership(incoming());
+      allow delete: if isSignedIn() && (existing().userId == request.auth.uid || isOrgAdmin(existing().orgId));
+    }
+
+    match /invites/{inviteId} {
+      allow create: if isSignedIn()
+        && isOrgAdmin(incoming().orgId)
+        && incoming().invitedBy == request.auth.uid
+        && inviteId == incoming().token
+        && isValidInvite(incoming());
+      allow get: if resource.data.status == 'pending';
+      allow list: if isSignedIn() && isOrgAdmin(resource.data.orgId);
+      allow update: if isSignedIn()
+        && isOrgMember(existing().orgId)
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+        && incoming().status in ['accepted', 'declined'];
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /userSettings/{userId} {
+      allow create: if isSignedIn() && isOwner(userId) && isValidUserSettings(incoming());
+      allow update: if isSignedIn() && isOwner(userId) && isValidUserSettings(incoming());
+      allow get: if isSignedIn() && isOwner(userId);
+      // No list for settings, it's a direct ID lookup
+    }
+
+    match /checkIns/{checkInId} {
+      allow create: if isSignedIn() && isValidCheckIn(incoming());
+      allow get: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // --- CRM Collections Rules ---
+    match /crm_contacts/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMContact(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMContact(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_accounts/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMAccount(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMAccount(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_leads/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMLead(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMLead(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_opportunities/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMOpportunity(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMOpportunity(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_activities/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMActivity(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMActivity(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_appointments/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMAppointment(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMAppointment(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_quotes_invoices/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMQuoteInvoice(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update: if isSignedIn() && isOrgMember(incoming().orgId) && isOrgMember(existing().orgId) && isValidCRMQuoteInvoice(incoming());
+      allow delete: if isSignedIn() && isOrgAdmin(existing().orgId);
+    }
+
+    match /crm_audit_logs/{id} {
+      allow create: if isSignedIn() && isOrgMember(incoming().orgId) && isValidCRMAuditLog(incoming());
+      allow get, list: if isSignedIn() && isOrgMember(resource.data.orgId);
+      allow update, delete: if false; // Audit logs are immutable
+    }
+  }
+}

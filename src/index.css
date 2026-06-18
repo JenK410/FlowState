@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Fredoka:wght@300..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Dancing+Script:wght@400..700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-bubble: "Fredoka", sans-serif;
+  --font-elegant: "Playfair Display", serif;
+  --font-cursive: "Dancing Script", cursive;
+
+  --color-dove: #D3D3D3;
+  --color-ink: #0f172a;
+  --color-paper: #f8fafc;
+  --color-mint: #34d399;
+  --color-lavender: #a78bfa;
+  --color-pastel-purple: #b19cd9;
+  --color-soft-purple: #f5f3ff;
+  --color-lilac: #d8b4fe;
+}
+
+@utility white-outline {
+  -webkit-text-stroke: 2px #fff;
+  paint-order: stroke fill;
+}
+
+@utility logo-outline {
+  filter: 
+    drop-shadow(1px 0px 0px #000)
+    drop-shadow(-1px 0px 0px #000)
+    drop-shadow(0px 1px 0px #000)
+    drop-shadow(0px -1px 0px #000);
+}
+
+@utility bubble-text {
+  font-family: var(--font-bubble);
+  font-weight: 900;
+  display: inline-block;
+  letter-spacing: 0;
+  
+  /* Gradient Minty Green/Blues Neon Pastel with soft White Shine animation */
+  color: transparent;
+  background: linear-gradient(
+    135deg,
+    #99f6e4 0%,
+    #a7f3d0 30%,
+    #ffffff 45%,
+    #ffffff 55%,
+    #a2f1d5 70%,
+    #99f6e4 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 6s ease-in-out infinite;
+}
+
+@utility black-outline {
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+}
+
+@utility outlined-text {
+  /* Precision outside outline (1.5px) */
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  font-weight: 900;
+}
+
+@keyframes shine {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: #f5f3ff;
+    overscroll-behavior-x: none;
+  }
+
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  main,
+  section,
+  aside,
+  header,
+  footer,
+  nav,
+  div,
+  form,
+  article {
+    min-width: 0;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button,
+  input,
+  textarea,
+  select,
+  a,
+  label,
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  span,
+  pre {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  img,
+  svg,
+  canvas,
+  video {
+    max-width: 100%;
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .safe-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .fit-screen {
+    width: min(100%, 100vw);
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .safe-scroll-panel {
+    max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+}

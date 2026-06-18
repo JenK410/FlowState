@@ -1,0 +1,6 @@
+{
+  "name": "FlowState",
+  "description": "A smart scheduling app that turns messy tasks into optimized daily plans. Now featuring Team Workspaces for collaborative precision planning and employee management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

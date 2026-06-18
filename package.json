@@ -1,0 +1,52 @@
+{
+  "name": "flowstate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "build:server": "tsc server.ts --ignoreConfig --outDir dist-server --module NodeNext --moduleResolution NodeNext --target ES2022 --skipLibCheck --esModuleInterop --allowSyntheticDefaultImports --noEmit false",
+    "start": "tsx server.ts",
+    "start:prod": "node dist-server/server.js",
+    "start:background": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-flowstate-production.ps1 -Port 3002",
+    "start:public": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start-flowstate-public.ps1 -Port 3002",
+    "stop:background": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop-flowstate-production.ps1 -Port 3002 -IncludeTunnel",
+    "status:background": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/status-flowstate-production.ps1 -Port 3002",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "date-fns": "^4.2.1",
+    "dotenv": "^17.4.2",
+    "esbuild": "^0.28.0",
+    "expo": "^56.0.12",
+    "express": "^5.2.1",
+    "firebase": "^12.13.0",
+    "firebase-admin": "^14.0.0",
+    "lucide-react": "^1.16.0",
+    "motion": "^12.39.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "recharts": "^3.8.1",
+    "stripe": "^22.2.1",
+    "tailwind-merge": "^3.6.0",
+    "tsx": "^4.22.3",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.13"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "tailwindcss": "^4.3.0"
+  }
+}

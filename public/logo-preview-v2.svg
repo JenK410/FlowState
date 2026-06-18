@@ -1,0 +1,88 @@
+<svg width="1600" height="1040" viewBox="0 0 1600 1040" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inkMint" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.58" stop-color="#111827"/>
+      <stop offset="1" stop-color="#134e4a"/>
+    </linearGradient>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="0.55" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#0f172a" flood-opacity="0.14"/>
+    </filter>
+    <filter id="lift" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1040" fill="#f8fafc"/>
+  <rect x="72" y="64" width="1456" height="912" rx="44" fill="#ffffff"/>
+  <text x="122" y="139" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="46" font-weight="900">FlowState Logo Direction - Round 2</text>
+  <text x="122" y="179" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="20" font-weight="600">Cleaner, more serious, less cute. These are preview concepts only.</text>
+
+  <!-- Concept 1 -->
+  <g transform="translate(122 245)">
+    <rect width="400" height="610" rx="34" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="34" y="58" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="25" font-weight="900">1. Signal F</text>
+    <text x="34" y="88" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="14" font-weight="700">minimal monogram, strongest app icon</text>
+    <g transform="translate(50 128)" filter="url(#shadow)">
+      <rect width="300" height="300" rx="70" fill="url(#inkMint)"/>
+      <path d="M92 222V80H214" stroke="#f8fafc" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M94 151H194" stroke="#f8fafc" stroke-width="30" stroke-linecap="round"/>
+      <path d="M180 214C218 198 239 169 244 124" stroke="url(#signal)" stroke-width="30" stroke-linecap="round"/>
+      <circle cx="247" cy="105" r="14" fill="#5eead4"/>
+    </g>
+    <text x="34" y="486" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="30" font-weight="900">FlowState</text>
+    <text x="34" y="522" fill="#475569" font-family="Outfit, Inter, Arial, sans-serif" font-size="15" font-weight="600">A confident F with a single flow signal.</text>
+    <text x="34" y="548" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="14" font-weight="500">Works best as a phone icon and favicon.</text>
+  </g>
+
+  <!-- Concept 2 -->
+  <g transform="translate(600 245)">
+    <rect width="400" height="610" rx="34" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="34" y="58" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="25" font-weight="900">2. Flow Glyph</text>
+    <text x="34" y="88" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="14" font-weight="700">no letters, more premium SaaS</text>
+    <g transform="translate(50 128)" filter="url(#shadow)">
+      <rect width="300" height="300" rx="70" fill="url(#paper)"/>
+      <rect x="18" y="18" width="264" height="264" rx="56" stroke="#0f172a" stroke-width="12"/>
+      <path d="M78 180C105 108 156 92 199 120C243 149 229 219 173 217C118 215 108 154 153 126" stroke="#0f172a" stroke-width="24" stroke-linecap="round"/>
+      <path d="M176 217C219 214 243 190 252 151" stroke="url(#signal)" stroke-width="24" stroke-linecap="round"/>
+      <circle cx="78" cy="180" r="11" fill="#34d399"/>
+      <circle cx="252" cy="151" r="11" fill="#a78bfa"/>
+    </g>
+    <text x="34" y="486" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="30" font-weight="900">FlowState</text>
+    <text x="34" y="522" fill="#475569" font-family="Outfit, Inter, Arial, sans-serif" font-size="15" font-weight="600">Abstract flow loop for optimized days.</text>
+    <text x="34" y="548" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="14" font-weight="500">More mature, less obvious, very scalable.</text>
+  </g>
+
+  <!-- Concept 3 -->
+  <g transform="translate(1078 245)">
+    <rect width="400" height="610" rx="34" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="34" y="58" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="25" font-weight="900">3. Command Mark</text>
+    <text x="34" y="88" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="14" font-weight="700">bold, operational, workspace-ready</text>
+    <g transform="translate(50 128)" filter="url(#shadow)">
+      <rect width="300" height="300" rx="70" fill="#0f172a"/>
+      <path d="M84 88H216" stroke="#f8fafc" stroke-width="25" stroke-linecap="round"/>
+      <path d="M84 150H184" stroke="#f8fafc" stroke-width="25" stroke-linecap="round"/>
+      <path d="M84 212H141" stroke="#f8fafc" stroke-width="25" stroke-linecap="round"/>
+      <path d="M184 211L232 163L184 115" stroke="url(#signal)" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="34" y="486" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="30" font-weight="900">FlowState</text>
+    <text x="34" y="522" fill="#475569" font-family="Outfit, Inter, Arial, sans-serif" font-size="15" font-weight="600">Task lines turning into forward action.</text>
+    <text x="34" y="548" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="14" font-weight="500">Best if you want stronger workspace energy.</text>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(122 900)">
+    <rect width="1356" height="1" fill="#e2e8f0"/>
+    <text x="0" y="54" fill="#0f172a" font-family="Outfit, Inter, Arial, sans-serif" font-size="38" font-weight="900">FlowState</text>
+    <text x="205" y="54" fill="#64748b" font-family="Outfit, Inter, Arial, sans-serif" font-size="18" font-weight="700">clean wordmark direction: sharp, quiet, modern</text>
+  </g>
+</svg>
