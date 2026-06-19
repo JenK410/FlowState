@@ -179,15 +179,6 @@ const getWorkspaceAnalyticsTierLabel = (memberCount: number) => {
   return `${tierIndex * 15 + 1}-${(tierIndex + 1) * 15} employees`;
 };
 
-const WORKSPACE_BILLING_TIERS = Array.from({ length: 10 }, (_, index) => {
-  const seatCount = (index + 1) * 15;
-  return {
-    seatCount,
-    label: getWorkspaceAnalyticsTierLabel(seatCount),
-    price: formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(seatCount)),
-  };
-});
-
 const getDomainIcon = (domain: string, size = 12, className?: string) => {
   switch (domain) {
     case 'Work': return <Briefcase size={size} className={className} />;
@@ -2644,16 +2635,6 @@ export default function App() {
     const currentWorkspaceMemberCount = Math.max(1, activeOrgMembers.length || 1);
     const minimumWorkspaceSeatCount = Math.max(15, Math.ceil(currentWorkspaceMemberCount / 15) * 15);
     const selectedWorkspaceSeatCount = Math.max(workspaceBillingSeatCount, minimumWorkspaceSeatCount);
-    const workspaceTierOptions = WORKSPACE_BILLING_TIERS.some(tier => tier.seatCount >= minimumWorkspaceSeatCount)
-      ? WORKSPACE_BILLING_TIERS
-      : [
-          ...WORKSPACE_BILLING_TIERS,
-          {
-            seatCount: minimumWorkspaceSeatCount,
-            label: getWorkspaceAnalyticsTierLabel(minimumWorkspaceSeatCount),
-            price: formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(minimumWorkspaceSeatCount)),
-          },
-        ];
     const workspacePrice = formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(selectedWorkspaceSeatCount));
     const displayPrice = scope === 'workspace' ? workspacePrice : plan.price;
     const tierLabel = scope === 'workspace' ? getWorkspaceAnalyticsTierLabel(selectedWorkspaceSeatCount) : null;
@@ -2685,24 +2666,27 @@ export default function App() {
       {scope === 'workspace' && (
         <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 text-left">
           <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
-            Choose Employee Tier
+            Choose Employee Tier Capacity
           </label>
-          <select
+          <input
+            type="number"
+            min={minimumWorkspaceSeatCount}
+            step={15}
             value={selectedWorkspaceSeatCount}
-            onChange={(event) => setWorkspaceBillingSeatCount(Number(event.target.value))}
+            onChange={(event) => {
+              const rawValue = Number(event.target.value);
+              if (!Number.isFinite(rawValue)) return;
+              setWorkspaceBillingSeatCount(Math.max(minimumWorkspaceSeatCount, Math.floor(rawValue)));
+            }}
             className="w-full rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm font-black text-slate-950 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
-          >
-            {workspaceTierOptions.map((tier) => {
-              const isBelowCurrentSize = tier.seatCount < minimumWorkspaceSeatCount;
-              return (
-                <option key={tier.seatCount} value={tier.seatCount} disabled={isBelowCurrentSize}>
-                  {tier.label} - {tier.price}{isBelowCurrentSize ? ' (too small)' : ''}
-                </option>
-              );
-            })}
-          </select>
+          />
+          <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+              {getWorkspaceAnalyticsTierLabel(selectedWorkspaceSeatCount)} - {workspacePrice}
+            </p>
+          </div>
           <p className="mt-2 text-[10px] font-bold text-slate-400 leading-relaxed">
-            Current workspace size requires at least {getWorkspaceAnalyticsTierLabel(minimumWorkspaceSeatCount)}. You can choose a higher tier for planned growth.
+            Current workspace size requires at least {getWorkspaceAnalyticsTierLabel(minimumWorkspaceSeatCount)}. Enter any higher capacity; billing rounds into 15-employee tiers with no app-side cap.
           </p>
         </div>
       )}
