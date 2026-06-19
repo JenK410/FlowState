@@ -31,6 +31,8 @@ services:
         sync: false
       - key: STRIPE_MAINFRAME_PRICE_ID
         sync: false
+      - key: STRIPE_PRODUCT_TAX_CODE
+        value: txcd_10103100
       - key: VITE_STRIPE_PUBLISHABLE_KEY
         sync: false
       - key: FIREBASE_SERVICE_ACCOUNT_KEY

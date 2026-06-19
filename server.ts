@@ -49,12 +49,10 @@ function getPublicErrorMessage(error: any, fallback: string) {
 
 const ANALYTICS_PRODUCT_CONFIG: Record<AnalyticsScope, {
   name: string;
-  envPriceId?: string;
   unitAmount: number;
 }> = {
   mainframe: {
     name: "FlowState Mainframe Analytics",
-    envPriceId: "STRIPE_MAINFRAME_PRICE_ID",
     unitAmount: 299,
   },
   workspace: {
@@ -186,20 +184,13 @@ function loadServiceAccountFromFile() {
 
 function buildStripeLineItem(scope: AnalyticsScope, workspaceMemberCount = 1): Stripe.Checkout.SessionCreateParams.LineItem {
   const plan = ANALYTICS_PRODUCT_CONFIG[scope];
-  const priceId = plan.envPriceId ? process.env[plan.envPriceId] : undefined;
-  if (priceId) {
-    return {
-      price: priceId,
-      quantity: 1,
-    };
-  }
-
   const unitAmount = scope === "workspace"
     ? getWorkspaceAnalyticsAmountCents(workspaceMemberCount)
     : plan.unitAmount;
   const tierLabel = scope === "workspace"
     ? getWorkspaceAnalyticsTierLabel(workspaceMemberCount)
     : undefined;
+  const taxCode = process.env.STRIPE_PRODUCT_TAX_CODE || "txcd_10103100";
 
   return {
     quantity: 1,
@@ -207,9 +198,11 @@ function buildStripeLineItem(scope: AnalyticsScope, workspaceMemberCount = 1): S
       currency: "usd",
       unit_amount: unitAmount,
       recurring: { interval: "month" },
+      tax_behavior: "exclusive",
       product_data: {
         name: plan.name,
         description: tierLabel,
+        tax_code: taxCode,
       },
     },
   };

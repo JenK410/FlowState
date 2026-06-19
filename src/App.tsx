@@ -3205,7 +3205,7 @@ export default function App() {
                     )}
                   >
                     <BarChart3 size={14} />
-                    <span>Analytics</span>
+                    <span>Mainframe Analytics</span>
                   </button>
 
                   <button 
