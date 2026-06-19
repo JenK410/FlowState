@@ -3476,18 +3476,6 @@ export default function App() {
                 )}
 
                 <div className="flex flex-wrap items-center gap-1.5 transition-all duration-300">
-                  <button
-                    type="button"
-                    onClick={() => setIsWorkScheduleOpen(true)}
-                    className="h-8 px-3 rounded-xl bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
-                    title="Add fixed work schedule"
-                  >
-                    <Briefcase size={11} />
-                    Work Schedule
-                  </button>
-
-                  <div className="h-4 w-[1px] bg-slate-100 mx-1" />
-
                   <span className="text-[9px] font-black uppercase text-slate-300 tracking-wider mr-1">Repeat:</span>
                   <div className="flex items-center gap-1">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
@@ -3584,6 +3572,16 @@ export default function App() {
                   <ChevronRight size={18} />
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsWorkScheduleOpen(true)}
+                className="h-8 px-3 rounded-xl bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm active:scale-95 transition-all w-full sm:w-auto justify-center"
+                title="Add fixed work schedule"
+              >
+                <Briefcase size={11} />
+                Work Schedule
+              </button>
             </div>
           </header>
 
