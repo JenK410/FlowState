@@ -300,6 +300,24 @@ function stripeId(value: string | { id?: string } | null | undefined) {
   return typeof value === "string" ? value : value.id || null;
 }
 
+function getStripeSubscriptionEntitlement(subscription: Stripe.Subscription | null | undefined) {
+  const status = subscription?.status || "unknown";
+  const hasActiveBillingStatus = ["active", "trialing"].includes(status);
+  const isCancellationScheduled = !!subscription?.cancel_at_period_end;
+  const isPaused = status === "paused" || !!subscription?.pause_collection;
+
+  return {
+    active: hasActiveBillingStatus && !isCancellationScheduled && !isPaused,
+    status: isCancellationScheduled && hasActiveBillingStatus ? "cancel_scheduled" : status,
+  };
+}
+
+async function retrieveCheckoutSubscription(session: Stripe.Checkout.Session) {
+  const subscriptionId = stripeId(session.subscription);
+  if (!subscriptionId) return null;
+  return await getStripe().subscriptions.retrieve(subscriptionId);
+}
+
 function getGenAI() {
   if (!genAI) {
     const key = process.env.GEMINI_API_KEY;
@@ -592,10 +610,12 @@ async function startServer() {
         const scope = session.metadata?.scope;
 
         if (isAnalyticsScope(scope) && session.mode === "subscription") {
+          const subscription = await retrieveCheckoutSubscription(session);
+          const entitlement = getStripeSubscriptionEntitlement(subscription);
           await writeAnalyticsSubscription({
             scope,
-            active: true,
-            status: "active",
+            active: entitlement.active,
+            status: entitlement.status,
             userId: session.metadata?.userId || undefined,
             orgId: session.metadata?.orgId || undefined,
             stripeCustomerId: stripeId(session.customer),
@@ -606,16 +626,23 @@ async function startServer() {
         }
       }
 
-      if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+      if (
+        event.type === "customer.subscription.updated" ||
+        event.type === "customer.subscription.deleted" ||
+        event.type === "customer.subscription.paused" ||
+        event.type === "customer.subscription.resumed"
+      ) {
         const subscription = event.data.object as Stripe.Subscription;
         const scope = subscription.metadata?.scope;
 
         if (isAnalyticsScope(scope)) {
-          const active = event.type !== "customer.subscription.deleted" && ["active", "trialing"].includes(subscription.status);
+          const entitlement = event.type === "customer.subscription.deleted"
+            ? { active: false, status: subscription.status || "deleted" }
+            : getStripeSubscriptionEntitlement(subscription);
           await writeAnalyticsSubscription({
             scope,
-            active,
-            status: subscription.status,
+            active: entitlement.active,
+            status: entitlement.status,
             userId: subscription.metadata?.userId || undefined,
             orgId: subscription.metadata?.orgId || undefined,
             stripeCustomerId: stripeId(subscription.customer),
@@ -752,6 +779,8 @@ async function startServer() {
       if (session.mode !== "subscription" || session.status !== "complete" || !["paid", "no_payment_required"].includes(session.payment_status || "")) {
         return res.status(402).json({ error: "Stripe has not confirmed payment for this subscription yet." });
       }
+      const subscription = await retrieveCheckoutSubscription(session);
+      const entitlement = getStripeSubscriptionEntitlement(subscription);
 
       if (scope === "workspace") {
         const orgId = session.metadata?.orgId;
@@ -761,8 +790,8 @@ async function startServer() {
 
       await writeAnalyticsSubscription({
         scope,
-        active: true,
-        status: "active",
+        active: entitlement.active,
+        status: entitlement.status,
         userId: session.metadata?.userId || undefined,
         orgId: session.metadata?.orgId || undefined,
         stripeCustomerId: stripeId(session.customer),
@@ -771,7 +800,7 @@ async function startServer() {
         monthlyAmountCents: Number(session.metadata?.monthlyAmountCents) || undefined,
       });
 
-      res.json({ active: true, scope });
+      res.json({ active: entitlement.active, scope, status: entitlement.status });
     } catch (error: any) {
       console.error("[FlowState] Checkout confirmation failed:", error);
       const status = error instanceof HttpError ? error.status : 500;
