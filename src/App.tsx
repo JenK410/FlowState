@@ -4282,6 +4282,28 @@ export default function App() {
 
           {activeTab !== 'workspaces' && activeTab !== 'analytics' && (
           <div className="max-w-7xl mx-auto w-full min-w-0 grid grid-cols-1 lg:grid-cols-12 gap-1.5 lg:gap-4 pb-4">
+            {!hasMainframeAnalyticsSubscription && (
+              <div className="lg:col-span-12 w-full rounded-[2rem] border border-emerald-100 bg-white/85 p-4 sm:p-5 shadow-xl shadow-emerald-100/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                <div className="min-w-0 text-left">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BarChart3 size={16} className="text-emerald-600" />
+                    <h3 className="text-sm font-black text-slate-950 leading-tight">Mainframe Analytics</h3>
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                    Unlock personal trend charts, focus velocity, life balance, and optimization signals for $2.99/month.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void requestAnalyticsPayment('mainframe')}
+                  disabled={paymentLoadingScope === 'mainframe'}
+                  className="w-full sm:w-auto shrink-0 rounded-2xl bg-slate-950 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                >
+                  {paymentLoadingScope === 'mainframe' ? 'Opening Stripe...' : 'Subscribe $2.99/month'}
+                </button>
+              </div>
+            )}
+
             {/* Countdown Section */}
             {isTodayStatus && (
               <div className="lg:col-span-12 w-full animate-in fade-in slide-in-from-top-4 duration-500">

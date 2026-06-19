@@ -19,6 +19,7 @@ dotenv.config();
 let genAI: GoogleGenAI | null = null;
 let stripeClient: Stripe | null = null;
 let firebaseAdminApp: FirebaseAdminApp | null = null;
+const DEFAULT_FIRESTORE_DATABASE_ID = "ai-studio-96491054-260f-4ee7-b4d2-c73b2a6faa0f";
 
 type AnalyticsScope = "mainframe" | "workspace";
 
@@ -29,6 +30,21 @@ class HttpError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+function getPublicErrorMessage(error: any, fallback: string) {
+  const message = String(error?.message || "");
+  const code = String(error?.code || "");
+
+  if (code.includes("not-found") || code === "5" || message.includes("5 NOT_FOUND") || message.includes("NOT_FOUND")) {
+    return "Firebase could not find the configured Firestore database. Confirm Render has FIRESTORE_DATABASE_ID=ai-studio-96491054-260f-4ee7-b4d2-c73b2a6faa0f and that the Firebase service account belongs to project gen-lang-client-0683642806.";
+  }
+
+  if (message.includes("Firebase Admin credentials are not configured")) {
+    return "Firebase Admin credentials are missing on Render. Add FIREBASE_SERVICE_ACCOUNT_BASE64 or FIREBASE_SERVICE_ACCOUNT_KEY, then redeploy.";
+  }
+
+  return message || fallback;
 }
 
 const ANALYTICS_PRODUCT_CONFIG: Record<AnalyticsScope, {
@@ -138,9 +154,9 @@ function getFirebaseAdminApp() {
 }
 
 function getAdminDb(): Firestore {
-  const databaseId = process.env.VITE_FIRESTORE_DATABASE_ID || process.env.FIRESTORE_DATABASE_ID;
+  const databaseId = process.env.VITE_FIRESTORE_DATABASE_ID || process.env.FIRESTORE_DATABASE_ID || DEFAULT_FIRESTORE_DATABASE_ID;
   const app = getFirebaseAdminApp();
-  return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+  return getFirestore(app, databaseId);
 }
 
 function getAdminAuth() {
@@ -714,7 +730,7 @@ async function startServer() {
     } catch (error: any) {
       console.error("[FlowState] Checkout session failed:", error);
       const status = error instanceof HttpError ? error.status : 500;
-      res.status(status).json({ error: error.message || "Unable to start checkout." });
+      res.status(status).json({ error: getPublicErrorMessage(error, "Unable to start checkout.") });
     }
   });
 
@@ -764,7 +780,7 @@ async function startServer() {
     } catch (error: any) {
       console.error("[FlowState] Checkout confirmation failed:", error);
       const status = error instanceof HttpError ? error.status : 500;
-      res.status(status).json({ error: error.message || "Unable to confirm checkout." });
+      res.status(status).json({ error: getPublicErrorMessage(error, "Unable to confirm checkout.") });
     }
   });
 
