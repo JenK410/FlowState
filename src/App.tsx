@@ -3300,16 +3300,16 @@ export default function App() {
             <div className="flex items-center justify-center w-full relative min-h-10 lg:min-h-12 mt-2 mb-2">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden absolute left-0 p-2 text-ink hover:bg-slate-50 rounded-full"
+                className="lg:hidden absolute left-0 z-20 p-2 text-ink hover:bg-slate-50 rounded-full"
               >
                 <Menu size={20} />
               </button>
               
-              <div className="flex flex-col items-center w-full min-w-0">
+              <div className="flex flex-col items-center w-full min-w-0 pointer-events-none">
                 <img
                   src="/flowstate-banner.png"
                   alt="FlowState"
-                  className="w-[min(90vw,520px)] lg:w-[min(50vw,760px)] h-auto object-contain"
+                  className="w-[min(90vw,520px)] lg:w-[min(50vw,760px)] h-auto object-contain pointer-events-none"
                 />
                 {showWorkspaceContext && organizations.some(o => o.id === activeOrgId) && (
                   <div className="flex items-center gap-1.5 px-3 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 mb-2 animate-in fade-in zoom-in duration-500">
