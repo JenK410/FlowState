@@ -329,6 +329,7 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
   });
 
   // 4. Add Routines (Flexible around fixed tasks)
+  let morningRoutineEnd = wakeUpTime;
   if (settings.morningRoutine > 0) {
     let mStart = wakeUpTime;
     let mEnd = addMinutes(mStart, settings.morningRoutine);
@@ -342,6 +343,7 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     
     if (isBefore(mEnd, sleepTime)) {
       schedule.push({ type: 'routine', start: mStart, end: mEnd, title: 'Morning Routine' });
+      morningRoutineEnd = mEnd;
     }
   }
 
@@ -361,16 +363,28 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     schedule.push({ type: 'routine', start: wStart, end: wEnd, title: 'Wind Down' });
   }
 
+  const planningStart = maxDate(wakeUpTime, morningRoutineEnd);
+  const planningEnd = minDate(sleepTime, windDownStart);
+
+  if (!isAfter(planningEnd, planningStart)) {
+    const completeSchedule = [...schedule].sort((a, b) => a.start.getTime() - b.start.getTime());
+    return {
+      schedule: completeSchedule,
+      overflow: scheduleEligibleTasks.filter(t => !t.fixedTime && t.status === 'pending')
+    };
+  }
+
   // 4.5 handle Recurring/Interval Tasks (e.g. "every 2 hours")
   const recurringTasks = scheduleEligibleTasks.filter(t => !t.fixedTime && t.everyHours && t.status === 'pending');
   
   recurringTasks.forEach(task => {
-    let currentRecurrence = addMinutes(wakeUpTime, 15); // Start a bit after wakeup
+    let currentRecurrence = planningStart;
     const intervalMins = task.everyHours! * 60;
 
-    while (isBefore(currentRecurrence, windDownStart)) {
+    while (isBefore(currentRecurrence, planningEnd)) {
       const start = currentRecurrence;
       const end = addMinutes(start, task.duration);
+      if (isAfter(end, planningEnd)) break;
 
       // Check for overlap with existing schedule
       const conflict = schedule.find(item => overlaps(start, end, item));
@@ -378,8 +392,8 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
       if (conflict) {
         // Shift it to just after the conflicting item
         currentRecurrence = addMinutes(conflict.end, 5);
-        // If it pushed past wind down, stop
-        if (isAfter(addMinutes(currentRecurrence, task.duration), windDownStart)) break;
+        // If it pushed past the protected planning window, stop
+        if (isAfter(addMinutes(currentRecurrence, task.duration), planningEnd)) break;
         continue; 
       }
 
@@ -401,7 +415,7 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
   schedule.sort((a, b) => a.start.getTime() - b.start.getTime());
 
   // 5. Identify Gaps
-  const gaps = buildGaps(schedule, dayStart, dayEnd);
+  const gaps = buildGaps(schedule, planningStart, planningEnd);
 
   // 6. Pack Floating Tasks
   const awakeOffset = (minutes: number) => {
