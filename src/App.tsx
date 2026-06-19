@@ -504,6 +504,7 @@ export default function App() {
   const [isEmailAuthLoading, setIsEmailAuthLoading] = useState(false);
   const [paymentLoadingScope, setPaymentLoadingScope] = useState<'mainframe' | 'workspace' | null>(null);
   const [workspaceBillingSeatCount, setWorkspaceBillingSeatCount] = useState(15);
+  const [workspaceBillingSeatInput, setWorkspaceBillingSeatInput] = useState('15');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'crm' | 'workspaces'>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2634,7 +2635,11 @@ export default function App() {
     const plan = ANALYTICS_PLANS[scope];
     const currentWorkspaceMemberCount = Math.max(1, activeOrgMembers.length || 1);
     const minimumWorkspaceSeatCount = Math.max(15, Math.ceil(currentWorkspaceMemberCount / 15) * 15);
-    const selectedWorkspaceSeatCount = Math.max(workspaceBillingSeatCount, minimumWorkspaceSeatCount);
+    const typedWorkspaceSeatCount = Number(workspaceBillingSeatInput);
+    const requestedWorkspaceSeatCount = Number.isFinite(typedWorkspaceSeatCount) && typedWorkspaceSeatCount > 0
+      ? Math.floor(typedWorkspaceSeatCount)
+      : workspaceBillingSeatCount;
+    const selectedWorkspaceSeatCount = Math.max(requestedWorkspaceSeatCount, minimumWorkspaceSeatCount);
     const workspacePrice = formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(selectedWorkspaceSeatCount));
     const displayPrice = scope === 'workspace' ? workspacePrice : plan.price;
     const tierLabel = scope === 'workspace' ? getWorkspaceAnalyticsTierLabel(selectedWorkspaceSeatCount) : null;
@@ -2672,11 +2677,17 @@ export default function App() {
             type="number"
             min={minimumWorkspaceSeatCount}
             step={15}
-            value={selectedWorkspaceSeatCount}
+            value={workspaceBillingSeatInput}
             onChange={(event) => {
+              setWorkspaceBillingSeatInput(event.target.value);
               const rawValue = Number(event.target.value);
-              if (!Number.isFinite(rawValue)) return;
-              setWorkspaceBillingSeatCount(Math.max(minimumWorkspaceSeatCount, Math.floor(rawValue)));
+              if (Number.isFinite(rawValue) && rawValue > 0) {
+                setWorkspaceBillingSeatCount(Math.max(minimumWorkspaceSeatCount, Math.floor(rawValue)));
+              }
+            }}
+            onBlur={() => {
+              setWorkspaceBillingSeatCount(selectedWorkspaceSeatCount);
+              setWorkspaceBillingSeatInput(String(selectedWorkspaceSeatCount));
             }}
             className="w-full rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm font-black text-slate-950 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
           />
