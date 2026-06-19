@@ -28,6 +28,10 @@ STRIPE_WEBHOOK_SECRET
 STRIPE_MAINFRAME_PRICE_ID
 VITE_STRIPE_PUBLISHABLE_KEY
 FIREBASE_SERVICE_ACCOUNT_KEY
+FIREBASE_SERVICE_ACCOUNT_BASE64
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY
 ```
 
 Optional invite email support:
@@ -37,7 +41,13 @@ RESEND_API_KEY
 RESEND_FROM_EMAIL
 ```
 
-`FIREBASE_SERVICE_ACCOUNT_KEY` should be the full Firebase service account JSON pasted as one secret value. Keep the local JSON file out of git.
+Use one Firebase Admin credential method in Render:
+
+- `FIREBASE_SERVICE_ACCOUNT_KEY`: full Firebase service account JSON pasted as one secret value.
+- `FIREBASE_SERVICE_ACCOUNT_BASE64`: Base64-encoded service account JSON.
+- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`: split service account values.
+
+Keep the local JSON file out of git.
 
 ## Firebase Authentication
 

@@ -67,6 +67,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=88050491406
 VITE_FIREBASE_APP_ID=1:88050491406:web:06b09933cb2bf769b91c5f
 VITE_FIRESTORE_DATABASE_ID=ai-studio-96491054-260f-4ee7-b4d2-c73b2a6faa0f
 FIREBASE_SERVICE_ACCOUNT_KEY
+FIREBASE_SERVICE_ACCOUNT_BASE64
 ```
 
-`FIREBASE_SERVICE_ACCOUNT_KEY` is the full service account JSON from Firebase Console. Store it only as a Render secret.
+Use either `FIREBASE_SERVICE_ACCOUNT_KEY` as the full service account JSON from Firebase Console, or `FIREBASE_SERVICE_ACCOUNT_BASE64` as the Base64-encoded JSON. Store either value only as a Render secret.

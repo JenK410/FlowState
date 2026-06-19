@@ -85,12 +85,14 @@ function getFirebaseAdminApp() {
   }
 
   const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  const base64ServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
-  if (rawServiceAccount) {
-    const serviceAccount = JSON.parse(rawServiceAccount);
+  if (rawServiceAccount || base64ServiceAccount) {
+    const decodedServiceAccount = rawServiceAccount || Buffer.from(String(base64ServiceAccount), "base64").toString("utf8");
+    const serviceAccount = JSON.parse(decodedServiceAccount);
     if (serviceAccount.private_key) {
       serviceAccount.private_key = String(serviceAccount.private_key).replace(/\\n/g, "\n");
     }
@@ -131,7 +133,7 @@ function getFirebaseAdminApp() {
   }
 
   throw new Error(
-    "Firebase Admin credentials are not configured. Add firebase-admin-service-account.json, FIREBASE_SERVICE_ACCOUNT_FILE, FIREBASE_SERVICE_ACCOUNT_KEY, or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY."
+    "Firebase Admin credentials are not configured. Add firebase-admin-service-account.json, FIREBASE_SERVICE_ACCOUNT_FILE, FIREBASE_SERVICE_ACCOUNT_KEY, FIREBASE_SERVICE_ACCOUNT_BASE64, or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY."
   );
 }
 
