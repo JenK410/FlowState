@@ -654,7 +654,7 @@ async function startServer() {
 
   app.post("/api/create-checkout-session", async (req, res) => {
     try {
-      const { scope, orgId, idToken, returnUrl } = req.body || {};
+      const { scope, orgId, idToken, returnUrl, workspaceSeatCount } = req.body || {};
       let workspaceMemberCount = 1;
       let monthlyAmountCents = ANALYTICS_PRODUCT_CONFIG.mainframe.unitAmount;
 
@@ -675,7 +675,9 @@ async function startServer() {
           return res.status(400).json({ error: "Workspace analytics requires a workspace." });
         }
         await assertWorkspaceAdmin(decodedToken.uid, orgId);
-        workspaceMemberCount = await getWorkspaceMemberCount(orgId);
+        const currentWorkspaceMemberCount = await getWorkspaceMemberCount(orgId);
+        const requestedWorkspaceSeatCount = Math.max(1, Math.floor(Number(workspaceSeatCount) || 1));
+        workspaceMemberCount = Math.max(currentWorkspaceMemberCount, requestedWorkspaceSeatCount);
         monthlyAmountCents = getWorkspaceAnalyticsAmountCents(workspaceMemberCount);
       }
 

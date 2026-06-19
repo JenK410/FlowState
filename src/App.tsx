@@ -179,6 +179,15 @@ const getWorkspaceAnalyticsTierLabel = (memberCount: number) => {
   return `${tierIndex * 15 + 1}-${(tierIndex + 1) * 15} employees`;
 };
 
+const WORKSPACE_BILLING_TIERS = Array.from({ length: 10 }, (_, index) => {
+  const seatCount = (index + 1) * 15;
+  return {
+    seatCount,
+    label: getWorkspaceAnalyticsTierLabel(seatCount),
+    price: formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(seatCount)),
+  };
+});
+
 const getDomainIcon = (domain: string, size = 12, className?: string) => {
   switch (domain) {
     case 'Work': return <Briefcase size={size} className={className} />;
@@ -503,6 +512,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isEmailAuthLoading, setIsEmailAuthLoading] = useState(false);
   const [paymentLoadingScope, setPaymentLoadingScope] = useState<'mainframe' | 'workspace' | null>(null);
+  const [workspaceBillingSeatCount, setWorkspaceBillingSeatCount] = useState(15);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'crm' | 'workspaces'>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2574,7 +2584,7 @@ export default function App() {
     void confirmPayment();
   }, [loading, user, isGuest]);
 
-  const requestAnalyticsPayment = async (scope: 'mainframe' | 'workspace') => {
+  const requestAnalyticsPayment = async (scope: 'mainframe' | 'workspace', workspaceSeatCount?: number) => {
     if (!user || isGuest) {
       window.alert('Sign in with an email account before starting a paid subscription.');
       return;
@@ -2604,6 +2614,7 @@ export default function App() {
         body: JSON.stringify({
           scope,
           orgId: scope === 'workspace' ? activeOrgId : undefined,
+          workspaceSeatCount: scope === 'workspace' ? workspaceSeatCount : undefined,
           idToken: await user.getIdToken(),
           returnUrl: cleanReturnUrl.toString(),
         }),
@@ -2630,10 +2641,22 @@ export default function App() {
     canActivate?: boolean;
   }) => {
     const plan = ANALYTICS_PLANS[scope];
-    const workspaceMemberCount = Math.max(1, activeOrgMembers.length || 1);
-    const workspacePrice = formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(workspaceMemberCount));
+    const currentWorkspaceMemberCount = Math.max(1, activeOrgMembers.length || 1);
+    const minimumWorkspaceSeatCount = Math.max(15, Math.ceil(currentWorkspaceMemberCount / 15) * 15);
+    const selectedWorkspaceSeatCount = Math.max(workspaceBillingSeatCount, minimumWorkspaceSeatCount);
+    const workspaceTierOptions = WORKSPACE_BILLING_TIERS.some(tier => tier.seatCount >= minimumWorkspaceSeatCount)
+      ? WORKSPACE_BILLING_TIERS
+      : [
+          ...WORKSPACE_BILLING_TIERS,
+          {
+            seatCount: minimumWorkspaceSeatCount,
+            label: getWorkspaceAnalyticsTierLabel(minimumWorkspaceSeatCount),
+            price: formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(minimumWorkspaceSeatCount)),
+          },
+        ];
+    const workspacePrice = formatMonthlyPrice(getWorkspaceAnalyticsPriceCents(selectedWorkspaceSeatCount));
     const displayPrice = scope === 'workspace' ? workspacePrice : plan.price;
-    const tierLabel = scope === 'workspace' ? getWorkspaceAnalyticsTierLabel(workspaceMemberCount) : null;
+    const tierLabel = scope === 'workspace' ? getWorkspaceAnalyticsTierLabel(selectedWorkspaceSeatCount) : null;
     const isOpeningCheckout = paymentLoadingScope === scope;
 
     return (
@@ -2659,6 +2682,30 @@ export default function App() {
         )}
         <p className="text-[10px] font-bold text-emerald-800/70 mt-2 leading-relaxed">{plan.description}</p>
       </div>
+      {scope === 'workspace' && (
+        <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 text-left">
+          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
+            Choose Employee Tier
+          </label>
+          <select
+            value={selectedWorkspaceSeatCount}
+            onChange={(event) => setWorkspaceBillingSeatCount(Number(event.target.value))}
+            className="w-full rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm font-black text-slate-950 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
+          >
+            {workspaceTierOptions.map((tier) => {
+              const isBelowCurrentSize = tier.seatCount < minimumWorkspaceSeatCount;
+              return (
+                <option key={tier.seatCount} value={tier.seatCount} disabled={isBelowCurrentSize}>
+                  {tier.label} - {tier.price}{isBelowCurrentSize ? ' (too small)' : ''}
+                </option>
+              );
+            })}
+          </select>
+          <p className="mt-2 text-[10px] font-bold text-slate-400 leading-relaxed">
+            Current workspace size requires at least {getWorkspaceAnalyticsTierLabel(minimumWorkspaceSeatCount)}. You can choose a higher tier for planned growth.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left mb-7">
         {[
           ['Focus Trends', 'See momentum across days'],
@@ -2673,7 +2720,7 @@ export default function App() {
       </div>
       <button
         type="button"
-        onClick={() => void requestAnalyticsPayment(scope)}
+        onClick={() => void requestAnalyticsPayment(scope, scope === 'workspace' ? selectedWorkspaceSeatCount : undefined)}
         disabled={!canActivate || isOpeningCheckout}
         className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-40"
       >
@@ -4195,6 +4242,35 @@ export default function App() {
           )}
 
     {activeTab === 'analytics' && (
+      <>
+        <div className="max-w-5xl mx-auto mb-5 rounded-[2rem] border border-emerald-100 bg-white/90 p-4 sm:p-5 shadow-xl shadow-emerald-100/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="min-w-0 text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart3 size={16} className="text-emerald-600" />
+              <h2 className="text-sm font-black text-slate-950 leading-tight">Mainframe Analytics Subscription</h2>
+            </div>
+            <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+              {hasMainframeAnalyticsSubscription
+                ? 'Mainframe Analytics is active for this account.'
+                : 'Unlock personal trend charts, focus velocity, life balance, and optimization signals for $2.99/month.'}
+            </p>
+          </div>
+          {hasMainframeAnalyticsSubscription ? (
+            <div className="w-full sm:w-auto shrink-0 rounded-2xl bg-emerald-50 px-5 py-3 text-center text-[10px] font-black uppercase tracking-widest text-emerald-700 border border-emerald-100">
+              Active
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void requestAnalyticsPayment('mainframe')}
+              disabled={paymentLoadingScope === 'mainframe'}
+              className="w-full sm:w-auto shrink-0 rounded-2xl bg-slate-950 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+            >
+              {paymentLoadingScope === 'mainframe' ? 'Opening Stripe...' : 'Subscribe $2.99/month'}
+            </button>
+          )}
+        </div>
+      {
       hasMainframeAnalyticsSubscription ? (
             <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 scrollbar-hide">
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -4276,6 +4352,8 @@ export default function App() {
           scope="mainframe"
         />
       )
+      }
+      </>
           )}
 
           {activeTab !== 'workspaces' && activeTab !== 'analytics' && (
