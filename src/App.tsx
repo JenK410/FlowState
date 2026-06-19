@@ -2703,13 +2703,8 @@ export default function App() {
         
         {/* Subtle Branding */}
         <div className="mb-5 sm:mb-8 lg:mb-10 text-slate-900 w-full">
-          <div className="relative mx-auto w-full max-w-[390px] sm:max-w-[430px]">
-            <img src="/flowstate-banner.png" alt="FlowState" className="block mx-auto w-full h-auto max-h-36 sm:max-h-40 lg:max-h-44 object-contain drop-shadow-xl" />
-            <motion.div
-              className="absolute inset-x-10 bottom-2 h-10 bg-mint/30 blur-2xl rounded-full -z-10"
-              animate={{ opacity: [0.25, 0.55, 0.25] }}
-              transition={{ duration: 4, repeat: Infinity }}
-            />
+          <div className="relative mx-auto w-full max-w-[460px] sm:max-w-[520px]">
+            <img src="/flowstate-banner.png" alt="FlowState" className="block mx-auto w-full h-auto object-contain" />
           </div>
           <p className="text-emerald-600/80 font-black tracking-wide uppercase text-xs">Precision Day Planning</p>
         </div>
@@ -3314,7 +3309,7 @@ export default function App() {
                 <img
                   src="/flowstate-banner.png"
                   alt="FlowState"
-                  className="w-[min(86vw,430px)] lg:w-[min(44vw,620px)] h-auto max-h-20 lg:max-h-24 object-contain drop-shadow-sm"
+                  className="w-[min(90vw,520px)] lg:w-[min(50vw,760px)] h-auto object-contain"
                 />
                 {showWorkspaceContext && organizations.some(o => o.id === activeOrgId) && (
                   <div className="flex items-center gap-1.5 px-3 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 mb-2 animate-in fade-in zoom-in duration-500">
