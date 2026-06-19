@@ -112,6 +112,15 @@ function getReferencedAnchorKind(task: Task): string | null {
   return null;
 }
 
+function getMealKind(task: Task): 'breakfast' | 'lunch' | 'dinner' | 'meal' | null {
+  const text = `${task.title} ${task.description || ''}`.toLowerCase();
+  if (/\b(breakfast)\b/.test(text)) return 'breakfast';
+  if (/\b(lunch|noon meal|midday meal)\b/.test(text)) return 'lunch';
+  if (/\b(dinner|supper)\b/.test(text)) return 'dinner';
+  if (task.domain === 'Meals' || /\b(eat|meal|cook|snack)\b/.test(text)) return 'meal';
+  return null;
+}
+
 function buildGaps(schedule: ScheduledItem[], dayStart: Date, dayEnd: Date) {
   const sorted = [...schedule].sort((a, b) => a.start.getTime() - b.start.getTime());
   const gaps: { start: Date; end: Date }[] = [];
@@ -423,6 +432,34 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     return { start, end: sleepTime, weight };
   };
 
+  const mealWindow = (task: Task, weight = 2.0) => {
+    const mealKind = getMealKind(task);
+    const text = `${task.title} ${task.description || ''}`.toLowerCase();
+    const avoidsLateMeals = /\b(no late meals|not too late|early dinner|dinner early|meal not late)\b/.test(text);
+
+    if (mealKind === 'breakfast') {
+      return fromWakeWindow(15, Math.min(180, awakeDurationMinutes * 0.25), weight);
+    }
+
+    if (mealKind === 'lunch') {
+      return phaseWindow(0.35, 0.58, weight);
+    }
+
+    if (mealKind === 'dinner') {
+      const startRatio = avoidsLateMeals ? 0.58 : 0.62;
+      const endRatio = avoidsLateMeals ? 0.78 : 0.84;
+      const relativeWindow = phaseWindow(startRatio, endRatio, weight);
+      const latestDinnerEnd = maxDate(relativeWindow.start, addMinutes(sleepTime, -Math.min(90, Math.max(30, awakeDurationMinutes * 0.12))));
+      return {
+        start: relativeWindow.start,
+        end: minDate(relativeWindow.end, latestDinnerEnd),
+        weight,
+      };
+    }
+
+    return phaseWindow(0.15, 0.84, weight);
+  };
+
   const domainPreferences: Record<string, { start: Date; end: Date; weight: number }> = {
     Development: phaseWindow(0.12, 0.38, 1.5), // Strong focus window after the user's day has started
     Work: phaseWindow(0.18, 0.65, 1.2),        // User-day core, not default office hours
@@ -432,7 +469,7 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     Wellness: phaseWindow(0.05, 0.95, 1.0),
     Personal: phaseWindow(0.6, 0.85, 1.1),
     Leisure: phaseWindow(0.75, 0.98, 1.0),
-    Meals: phaseWindow(0.15, 0.88, 1.0),
+    Meals: phaseWindow(0.15, 0.84, 1.0),
     Sleep: beforeSleepWindow(120, 2.0),
   };
 
@@ -448,7 +485,7 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     }
 
     if (/\b(breakfast)\b/.test(text)) {
-      return fromWakeWindow(15, Math.min(150, awakeDurationMinutes * 0.22), 2.0);
+      return mealWindow(task, 2.4);
     }
 
     if (/\b(wake|waking|wake up|morning)\b/.test(text)) {
@@ -460,12 +497,15 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     }
 
     if (/\b(lunch|noon|midday)\b/.test(text)) {
-      return phaseWindow(0.38, 0.56, 1.4);
+      return mealWindow(task, 2.2);
     }
 
     if (/\b(dinner|supper)\b/.test(text)) {
-      const avoidsLateMeals = /\b(no late meals|not too late|early dinner|dinner early|meal not late)\b/.test(text);
-      return avoidsLateMeals ? phaseWindow(0.62, 0.78, 2.4) : phaseWindow(0.68, 0.88, 2.0);
+      return mealWindow(task, 2.4);
+    }
+
+    if (getMealKind(task)) {
+      return mealWindow(task, 1.8);
     }
 
     return domainPreferences[task.domain] || phaseWindow(0.2, 0.7, 1.0);
@@ -487,14 +527,18 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
   // They get first claim on awake/free time before flexible optimization.
   displacedFixedTasks.forEach(task => {
     const intendedStart = parseClockTimeInAwakeDay(task.fixedTime!);
+    const fixedMealKind = getMealKind(task);
+    const fixedMealWindow = fixedMealKind ? mealWindow(task, 2.0) : null;
     let bestGapIdx = -1;
     let bestStartTime: Date | null = null;
     let bestDistance = Number.POSITIVE_INFINITY;
 
     for (let i = 0; i < gaps.length; i++) {
       const gap = gaps[i];
-      const earliestStart = isToday && isBefore(gap.start, now) ? addMinutes(now, 2) : gap.start;
-      const latestStart = addMinutes(gap.end, -task.duration);
+      const earliestStartBase = maxDate(gap.start, fixedMealWindow?.start || gap.start);
+      const earliestStart = isToday && isBefore(earliestStartBase, now) ? addMinutes(now, 2) : earliestStartBase;
+      const latestStartBase = addMinutes(gap.end, -task.duration);
+      const latestStart = fixedMealWindow ? minDate(latestStartBase, addMinutes(fixedMealWindow.end, -task.duration)) : latestStartBase;
       if (isAfter(earliestStart, latestStart)) continue;
 
       const clampedStart = minDate(maxDate(intendedStart, earliestStart), latestStart);
@@ -618,12 +662,16 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
     const pref = getTaskPreference(task);
     const prefStart = pref.start;
     const prefEnd = pref.end;
+    const taskMealKind = getMealKind(task);
 
     for (let i = 0; i < gaps.length; i++) {
         const gap = gaps[i];
         
-        const earliestStart = isToday && isBefore(gap.start, now) ? addMinutes(now, 2) : gap.start;
-        const latestStart = addMinutes(gap.end, -task.duration);
+        const hardWindowStart = taskMealKind ? prefStart : gap.start;
+        const hardWindowEnd = taskMealKind ? prefEnd : gap.end;
+        const earliestStartBase = maxDate(gap.start, hardWindowStart);
+        const earliestStart = isToday && isBefore(earliestStartBase, now) ? addMinutes(now, 2) : earliestStartBase;
+        const latestStart = minDate(addMinutes(gap.end, -task.duration), addMinutes(hardWindowEnd, -task.duration));
         if (isAfter(earliestStart, latestStart)) {
             continue;
         }
@@ -664,6 +712,8 @@ export function generateDailySchedule(tasks: Task[], settings: UserSettings, tar
 
     if (bestGapIdx !== -1 && bestStartTime) {
       scheduleTaskWithBuffer(scheduledTasks, gaps, bestGapIdx, task, bestStartTime);
+    } else if (taskMealKind) {
+      remainingFloating.push(task);
     } else if (task.duration >= 20) {
       // OPTIMIZATION: Try Auto-Splitting if the task doesn't fit in any single gap
       // Split into two parts (50/50)

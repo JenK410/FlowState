@@ -1966,6 +1966,63 @@ export default function App() {
     return `Acknowledged ${titles.length} tasks: ${titles.slice(0, 3).join(', ')} +${titles.length - 3} more. Planning around your day...`;
   };
 
+  const getDailyRepeatCount = (task: any) => {
+    if (task.fixedTime || task.everyHours) return 1;
+    const text = `${task.title || ''} ${task.description || ''}`.toLowerCase();
+    const wordCounts: Record<string, number> = {
+      once: 1,
+      one: 1,
+      twice: 2,
+      two: 2,
+      thrice: 3,
+      three: 3,
+      four: 4,
+      five: 5,
+      six: 6,
+    };
+    const match =
+      text.match(/\b(\d+|once|twice|thrice|one|two|three|four|five|six)\s*(?:x|times?)\s*(?:a|per)?\s*day\b/i) ||
+      text.match(/\b(\d+)\s*x\s*\/\s*day\b/i) ||
+      text.match(/\b(\d+|once|twice|thrice|one|two|three|four|five|six)\s*(?:daily|per day)\b/i);
+    if (!match) return 1;
+    const raw = String(match[1]).toLowerCase();
+    const count = Number(raw) || wordCounts[raw] || 1;
+    return Math.max(1, Math.min(6, count));
+  };
+
+  const expandDailyRepeatTask = (task: any) => {
+    const repeatCount = getDailyRepeatCount(task);
+    if (repeatCount <= 1) return [task];
+
+    const timingLabels: Record<number, string[]> = {
+      2: ['morning', 'evening'],
+      3: ['morning', 'midday', 'evening'],
+      4: ['morning', 'midday', 'afternoon', 'evening'],
+      5: ['early morning', 'late morning', 'midday', 'afternoon', 'evening'],
+      6: ['early morning', 'late morning', 'midday', 'afternoon', 'early evening', 'evening'],
+    };
+    const labels = timingLabels[repeatCount] || Array.from({ length: repeatCount }, (_, index) => `slot ${index + 1}`);
+    const cleanTitle = String(task.title || 'Untitled Task')
+      .replace(/\b(\d+|once|twice|thrice|one|two|three|four|five|six)\s*(?:x|times?)\s*(?:a|per)?\s*day\b/ig, '')
+      .replace(/\b\d+\s*x\s*\/\s*day\b/ig, '')
+      .replace(/\b(\d+|once|twice|thrice|one|two|three|four|five|six)\s*(?:daily|per day)\b/ig, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+      .replace(/^[-:]+|[-:]+$/g, '')
+      .trim() || String(task.title || 'Untitled Task');
+
+    return labels.map((label, index) => ({
+      ...task,
+      title: `${cleanTitle} (${label})`,
+      description: [task.description, `Split from "${task.title}" because it was requested ${repeatCount} times a day. Timing cue: ${label}.`]
+        .filter(Boolean)
+        .join(' '),
+      fixedTime: null,
+      everyHours: undefined,
+      _repeatInstance: index + 1,
+    }));
+  };
+
   const isGenericWorkScheduleInput = (task: any) => {
     const title = String(task.title || '').trim().toLowerCase();
     const description = String(task.description || '').trim().toLowerCase();
@@ -2131,10 +2188,12 @@ export default function App() {
         return;
       }
 
+      const expandedTasksFromServer = tasksFromServer.flatMap(expandDailyRepeatTask);
+
       // Success in parsing - clear input early to provide immediate "accepted" feedback
       setInputText("");
       setIsParsing(false);
-      setParsingStatus(formatTaskAcknowledgement(tasksFromServer));
+      setParsingStatus(formatTaskAcknowledgement(expandedTasksFromServer));
       
       // Determine target dates
       const baseDate = parse(selectedDate, 'yyyy-MM-dd', new Date());
@@ -2152,7 +2211,7 @@ export default function App() {
       let autoWorkScheduleCount = 0;
       let skippedUntimedWorkCount = 0;
 
-      for (const t of tasksFromServer) {
+      for (const t of expandedTasksFromServer) {
         // If Gemini provided a date that is DIFFERENT from the reference date, 
         // we assume the user specifically meant that day, so we don't duplicate it.
         const hasSpecificDate = t.date && !isDateMatch(t.date, selectedDate);
